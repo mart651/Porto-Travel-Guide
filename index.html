@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porto Tour - Guida Interattiva</title>
+    <!-- Tailwind CSS for modern responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        porto: {
+                            blue: '#0F2C59',      /* Deep Azulejo Blue */
+                            gold: '#DAC0A3',      /* Sunset Gold */
+                            cream: '#F8F0E5',     /* Light Cream Background */
+                            accent: '#10B981',    /* Success / Checked Green */
+                            dark: '#1F2937'       /* Dark Slate */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F0E5;
+        }
+        /* Custom scrollbar for beautiful UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F1F1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0F2C59;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-porto-dark min-h-screen flex flex-col antialiased">
+
+    <!-- HEADER / HERO -->
+    <header class="bg-porto-blue text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <!-- Decorative Azulejo Icon in SVG -->
+                <svg class="w-8 h-8 text-porto-gold fill-current" viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6Z"/>
+                </svg>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight">PORTO TOUR</h1>
+                    <p class="text-xs text-porto-gold uppercase font-semibold">1 - 3 Giugno • Guida Digitale Pronta all'Uso</p>
+                </div>
+            </div>
+            
+            <!-- Quick GPS exporter action button -->
+            <button onclick="downloadKML()" class="flex items-center gap-2 bg-porto-gold text-porto-blue hover:bg-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md transform active:scale-95">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Esporta Itinerari su Google Maps
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6">
+
+        <!-- QUICK STATS & PROGRESS -->
+        <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-porto-gold/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-porto-blue/10 rounded-xl text-porto-blue">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-500">Avanzamento Visite</h2>
+                    <div class="flex items-center gap-2">
+                        <span id="progress-text" class="text-lg font-bold text-porto-blue">0%</span>
+                        <span class="text-xs text-gray-400">(<span id="visited-count">0</span> di <span id="total-count">12</span> luoghi)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2 bg-gray-100 h-3 rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-porto-blue h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <nav class="flex overflow-x-auto pb-3 gap-2 no-scrollbar border-b border-gray-200 mb-6">
+            <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all bg-porto-blue text-white shadow-md">
+                🗺️ Panoramica & Info
+            </button>
+            <button onclick="switchTab('day1')" id="tab-day1" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all bg-white text-porto-blue hover:bg-porto-blue/5">
+                🗓️ Giorno 1 (1 Giu)
+            </button>
+            <button onclick="switchTab('day2')" id="tab-day2" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all bg-white text-porto-blue hover:bg-porto-blue/5">
+                🗓️ Giorno 2 (2 Giu)
+            </button>
+            <button onclick="switchTab('day3')" id="tab-day3" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all bg-white text-porto-blue hover:bg-porto-blue/5">
+                🗓️ Giorno 3 (3 Giu)
+            </button>
+            <button onclick="switchTab('notes')" id="tab-notes" class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all bg-white text-porto-blue hover:bg-porto-blue/5">
+                📝 Note Personali
+            </button>
+        </nav>
+
+        <!-- TAB PANELS -->
+        
+        <!-- 1. OVERVIEW PANEL -->
+        <div id="panel-overview" class="tab-panel space-y-6">
+            <!-- Hotel & Arrival Highlights -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <span class="text-xs font-bold text-porto-blue bg-porto-gold/30 px-3 py-1 rounded-full uppercase">Base del Tour</span>
+                    <h3 class="text-2xl font-bold mt-2">HF Tuela Porto</h3>
+                    <p class="text-gray-600 text-sm mt-1">📍 Rua de Júlio Dinis, Boavista • Camera al 14° Piano con super vista panoramica</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <a href="https://www.google.com/maps/search/?api=1&query=HF+Tuela+Porto" target="_blank" class="flex-1 md:flex-none text-center bg-porto-blue text-white px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all">
+                        Naviga verso Hotel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Public Transport Advice & Calculator -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-porto-blue mb-4 flex items-center gap-2">
+                    🚇 Trasporti Pubblici: Quale conviene?
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 rounded-xl bg-porto-cream/50 border border-porto-gold/20 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-porto-blue uppercase">Opzione Economica</span>
+                            <h4 class="font-bold text-base mt-1">Andante Azul (Ricaricabile)</h4>
+                            <p class="text-xs text-gray-500 mt-2 leading-relaxed">
+                                Carta ricaricabile singola (costo tessera 0,60€). Ideale se cammini molto e usi i mezzi meno di 4 volte al giorno. 
+                            </p>
+                            <p class="text-xs font-semibold text-porto-blue mt-2">Corsa Z2 (centro): ~1,40€ • Corsa Z4 (aeroporto): ~2,25€</p>
+                        </div>
+                        <button onclick="calculateTransport('azul')" class="mt-4 w-full bg-porto-blue/10 hover:bg-porto-blue/20 text-porto-blue text-xs font-bold py-2 rounded-lg transition-all">
+                            Simula budget Azul
+                        </button>
+                    </div>
+                    
+                    <div class="p-4 rounded-xl bg-porto-blue/5 border border-porto-blue/10 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-porto-blue uppercase">Opzione Consigliata</span>
+                            <h4 class="font-bold text-base mt-1">Andante Tour 3 (72 Ore)</h4>
+                            <p class="text-xs text-gray-500 mt-2 leading-relaxed">
+                                Viaggi illimitati su tutti i bus e metro di tutte le zone (incluso aeroporto Z4) per 72 ore consecutive dalla prima convalida.
+                            </p>
+                            <p class="text-xs font-semibold text-porto-blue mt-2">Costo fisso: 15,00€ (Zero pensieri su cambi di zona)</p>
+                        </div>
+                        <button onclick="calculateTransport('tour')" class="mt-4 w-full bg-porto-blue text-white hover:bg-opacity-95 text-xs font-bold py-2 rounded-lg transition-all">
+                            Seleziona Tour 3
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulating Custom Tooltip for selection -->
+                <div id="transport-calc-box" class="hidden mt-4 p-4 rounded-xl bg-emerald-50 text-emerald-800 text-sm border border-emerald-200">
+                    <p id="transport-calc-msg" class="font-medium"></p>
+                </div>
+            </div>
+
+            <!-- Global Map Exporters -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-porto-blue mb-2">📥 Mappe Rapide & Navigazione Totale</h3>
+                <p class="text-sm text-gray-500 mb-4">Usa questi link pre-ottimizzati con più tappe per non dover impostare manualmente la destinazione ogni volta.</p>
+                
+                <div class="space-y-3">
+                    <a href="https://www.google.com/maps/dir/?api=1&origin=HF+Tuela+Porto&destination=Vinum+Restaurant+Porto&waypoints=Cais+da+Ribeira%7CRua+das+Flores+Porto%7CPonte+Dom+Luís+I" target="_blank" class="flex justify-between items-center p-3.5 bg-gray-50 hover:bg-porto-gold/10 rounded-xl transition-all border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">🗺️</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Percorso Giorno 1</h4>
+                                <p class="text-xs text-gray-500">HF Tuela ➔ 6 Ponti ➔ R. das Flores ➔ Ponte Dom Luís I ➔ Vinum</p>
+                            </div>
+                        </div>
+                        <span class="text-porto-blue font-bold text-xs flex items-center gap-1">Mappa <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></span>
+                    </a>
+                    
+                    <a href="https://www.google.com/maps/dir/?api=1&origin=Mercado+do+Bolhao+Porto&destination=HF+Tuela+Porto&waypoints=Sao+Bento+Station%7CMcDonalds+Imperial+Porto%7CCantina+32+Porto%7CTorre+dos+Clerigos%7CLivraria+Lello%7CJardins+do+Palacio+de+Cristal" target="_blank" class="flex justify-between items-center p-3.5 bg-gray-50 hover:bg-porto-gold/10 rounded-xl transition-all border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">🗺️</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Percorso Giorno 2</h4>
+                                <p class="text-xs text-gray-500">Mercado Bolhão ➔ São Bento ➔ Clérigos ➔ Lello ➔ Palácio de Cristal</p>
+                            </div>
+                        </div>
+                        <span class="text-porto-blue font-bold text-xs flex items-center gap-1">Mappa <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></span>
+                    </a>
+
+                    <a href="https://www.google.com/maps/dir/?api=1&origin=HF+Tuela+Porto&destination=Aeroporto+Francisco+Sá+Carneiro&waypoints=Foz+do+Douro%7CMatosinhos" target="_blank" class="flex justify-between items-center p-3.5 bg-gray-50 hover:bg-porto-gold/10 rounded-xl transition-all border border-gray-100">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">🗺️</span>
+                            <div>
+                                <h4 class="font-bold text-sm">Percorso Giorno 3</h4>
+                                <p class="text-xs text-gray-500">HF Tuela ➔ Foz do Douro ➔ Matosinhos (Pesce) ➔ Aeroporto</p>
+                            </div>
+                        </div>
+                        <span class="text-porto-blue font-bold text-xs flex items-center gap-1">Mappa <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. DAY 1 PANEL -->
+        <div id="panel-day1" class="tab-panel hidden space-y-6">
+            <div class="border-l-4 border-porto-blue pl-4">
+                <h3 class="text-xl font-extrabold text-porto-blue">Domenica 1 Giugno: L'Anima del Douro</h3>
+                <p class="text-sm text-gray-500">Iniziamo dal punto più lontano (la Ribeira) salendo verso il tramonto sul fiume.</p>
+            </div>
+
+            <!-- Timeline wrapper -->
+            <div class="space-y-4">
+                
+                <!-- Card 1: Check-in -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">1</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">15:30</span>
+                                <h4 class="font-bold text-base">Arrivo & Check-in Hotel</h4>
+                                <p class="text-xs text-gray-500 mt-1">HF Tuela Porto. Rilassati e goditi la vista dal 14° piano.</p>
+                            </div>
+                            <input type="checkbox" id="check-tuela" onclick="toggleLocation('check-tuela')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: 6 Bridges Cruise -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">2</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">16:30</span>
+                                <h4 class="font-bold text-base">Gita dei 6 Ponti (Crociera)</h4>
+                                <p class="text-xs text-gray-500 mt-1">Cais da Ribeira • Durata 50 minuti. Il modo più rilassante per vedere Porto dal fiume.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Douro+Acima+Cais+da+Ribeira" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-cruise" onclick="toggleLocation('check-cruise')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Rua das Flores -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">3</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">18:00</span>
+                                <h4 class="font-bold text-base">Rua das Flores</h4>
+                                <p class="text-xs text-gray-500 mt-1">Passeggiata nella via pedonale dello shopping artigianale e artisti di strada.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Rua+das+Flores+Porto" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-flores" onclick="toggleLocation('check-flores')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Ponte Dom Luis Sunset -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">4</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">19:30</span>
+                                <h4 class="font-bold text-base">Tramonto su Ponte Dom Luís I</h4>
+                                <p class="text-xs text-gray-500 mt-1">Camminata sul ponte superiore. Lo scenario ideale mentre cala il sole.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Ponte+Dom+Luis+I+Porto" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-luis" onclick="toggleLocation('check-luis')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Dinner Vinum -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-porto-gold/30 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-gold text-porto-blue flex items-center justify-center font-bold text-sm">🍽️</div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-porto-blue font-bold bg-porto-gold/30 px-2 py-0.5 rounded">CENA CONSIGLIATA</span>
+                                <h4 class="font-bold text-base mt-1">Vinum (Graham's Port Lodge)</h4>
+                                <p class="text-xs text-gray-500 mt-1">Cena spettacolare a Gaia. Viste mozzafiato sul fiume e vini porto leggendari.</p>
+                                <div class="flex gap-4 mt-2">
+                                    <a href="https://www.google.com/maps/search/?api=1&query=Vinum+Restaurant+Porto" target="_blank" class="text-xs text-porto-blue font-bold hover:underline">
+                                        📍 Naviga su Maps →
+                                    </a>
+                                    <span class="text-xs text-emerald-600 font-bold">🏷️ Verifica TheFork per sconti!</span>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="check-vinum" onclick="toggleLocation('check-vinum')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 3. DAY 2 PANEL -->
+        <div id="panel-day2" class="tab-panel hidden space-y-6">
+            <div class="border-l-4 border-porto-blue pl-4">
+                <h3 class="text-xl font-extrabold text-porto-blue">Lunedì 2 Giugno: Cuore Storico & Splendidi Giardini</h3>
+                <p class="text-sm text-gray-500">Oggi partiamo dal punto più lontano a est (Bolhão) tornando gradualmente verso l'hotel a Boavista.</p>
+            </div>
+
+            <div class="space-y-4">
+                
+                <!-- Card 1: Bolhao Market -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">1</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">09:30</span>
+                                <h4 class="font-bold text-base">Mercado do Bolhão</h4>
+                                <p class="text-xs text-gray-500 mt-1">Colori, profumi e vita locale nel mercato storico ristrutturato.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Mercado+do+Bolhao" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-bolhao" onclick="toggleLocation('check-bolhao')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Sao Bento -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">2</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">11:00</span>
+                                <h4 class="font-bold text-base">Stazione di São Bento</h4>
+                                <p class="text-xs text-gray-500 mt-1">Ammira gli azulejos storici che decorano l'interno della hall centrale.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Sao+Bento+Station+Porto" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-bento" onclick="toggleLocation('check-bento')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: McDonald's Imperial -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">3</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">12:00</span>
+                                <h4 class="font-bold text-base">McDonald's Imperial</h4>
+                                <p class="text-xs text-gray-500 mt-1">Spesso votato come il McDonald's più bello del mondo. Ottimo per una foto rapida e un caffè.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=McDonalds+Imperial+Porto" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-mcd" onclick="toggleLocation('check-mcd')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lunch Card -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-porto-gold/30 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-gold text-porto-blue flex items-center justify-center font-bold text-sm">🍴</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div>
+                            <span class="text-xs text-porto-blue font-bold bg-porto-gold/30 px-2 py-0.5 rounded">PRANZO CONSIGLIATO</span>
+                            <h4 class="font-bold text-base mt-1">Cantina 32 o Tapabento</h4>
+                            <p class="text-xs text-gray-500 mt-1">Atmosfera industrial-chic, piatti locali rivisitati. Si consiglia vivamente la prenotazione.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Clerigos & Lello -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">4</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">14:30</span>
+                                <h4 class="font-bold text-base">Torre dos Clérigos e Libreria Lello</h4>
+                                <p class="text-xs text-gray-500 mt-1">Il cuore storico e letterario di Porto. *Nota: Prenota i biglietti della Lello online in anticipo.*</p>
+                                <div class="flex gap-4 mt-2">
+                                    <a href="https://www.google.com/maps/search/?api=1&query=Livraria+Lello+Porto" target="_blank" class="text-xs text-porto-blue font-bold hover:underline">
+                                        📍 Naviga su Maps →
+                                    </a>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="check-lello" onclick="toggleLocation('check-lello')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Cristal Palace Gardens -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">5</div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">17:00</span>
+                                <h4 class="font-bold text-base">Jardins do Palácio de Cristal</h4>
+                                <p class="text-xs text-gray-500 mt-1">Spettacolari giardini con pavoni e vista panoramica imbattibile sul Douro, situati sulla strada di ritorno verso l'hotel.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Jardins+do+Palacio+de+Cristal" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-crystal" onclick="toggleLocation('check-crystal')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 4. DAY 3 PANEL -->
+        <div id="panel-day3" class="tab-panel hidden space-y-6">
+            <div class="border-l-4 border-porto-blue pl-4">
+                <h3 class="text-xl font-extrabold text-porto-blue">Martedì 3 Giugno: Brezza dell'Oceano e Rientro</h3>
+                <p class="text-sm text-gray-500">Oggi usiamo la macchina per esplorare la costa atlantica prima di dirigerci all'aeroporto.</p>
+            </div>
+
+            <div class="space-y-4">
+                
+                <!-- Card 1: Foz do Douro -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">1</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">09:30</span>
+                                <h4 class="font-bold text-base">Passeggiata a Foz do Douro</h4>
+                                <p class="text-xs text-gray-500 mt-1">Laddove il fiume incontra l'oceano. Una camminata distensiva vicino al Faro di Felgueiras.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Farol+de+Felgueiras" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-foz" onclick="toggleLocation('check-foz')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Matosinhos Seafood -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-porto-gold/30 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-gold text-porto-blue flex items-center justify-center font-bold text-sm">🐟</div>
+                        <div class="h-full w-0.5 bg-gray-200 my-1"></div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-porto-blue font-bold bg-porto-gold/30 px-2 py-0.5 rounded">PRANZO DI PESCE</span>
+                                <h4 class="font-bold text-base mt-1">Pranzo a Matosinhos</h4>
+                                <p class="text-xs text-gray-500 mt-1">La zona per eccellenza per il pesce fresco grigliato all'aperto. Ottima sosta strategica vicino all'aeroporto.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Matosinhos+Porto" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-matosinhos" onclick="toggleLocation('check-matosinhos')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Car drop-off and Departure -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex gap-4 relative">
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-porto-blue text-white flex items-center justify-center font-bold text-sm">2</div>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs text-gray-400 font-bold">14:30 - 15:00</span>
+                                <h4 class="font-bold text-base">Riconsegna Auto & Aeroporto</h4>
+                                <p class="text-xs text-gray-500 mt-1">Aeroporto Francisco Sá Carneiro (OPO). Consegna l'auto ed effettua il check-in per il volo delle 17:00.</p>
+                                <a href="https://www.google.com/maps/search/?api=1&query=Aeroporto+Francisco+Sa+Carneiro" target="_blank" class="inline-flex items-center gap-1 text-xs text-porto-blue font-bold mt-2 hover:underline">
+                                    📍 Naviga su Maps →
+                                </a>
+                            </div>
+                            <input type="checkbox" id="check-airport" onclick="toggleLocation('check-airport')" class="w-5 h-5 accent-porto-blue rounded">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 5. NOTES PANEL -->
+        <div id="panel-notes" class="tab-panel hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 class="text-lg font-bold text-porto-blue mb-2">📝 Note di Viaggio & Promemoria</h3>
+                <p class="text-sm text-gray-500 mb-4">Usa questa area per memorizzare i tuoi codici di prenotazione (Lello, Ristoranti) o appunti sul noleggio auto. Le note si salvano automaticamente sul tuo dispositivo.</p>
+                
+                <textarea id="travel-notes" rows="12" class="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-porto-blue text-sm" placeholder="Es. Codice ritiro auto: XYZ123... Prenotazione Lello ore 15:00... Orario check-in ristorante Vinum..."></textarea>
+                
+                <div class="flex justify-between items-center mt-3">
+                    <span id="save-status" class="text-xs text-emerald-600 font-semibold opacity-0 transition-opacity duration-300">✓ Salvato automaticamente nel browser</span>
+                    <button onclick="clearNotes()" class="text-xs text-red-500 font-bold hover:underline">Cancella tutto</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-6 text-center text-xs text-gray-400">
+        <div class="max-w-5xl mx-auto px-4">
+            <p>© 2026 Porto Pocket Guide - Organizzato da HF Tuela Porto (14° Piano)</p>
+            <p class="mt-1">Tutti i link mappa aprono direttamente l'applicazione Google Maps.</p>
+        </div>
+    </footer>
+
+    <!-- SUCCESS TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-porto-blue text-white py-3 px-5 rounded-xl shadow-2xl transition-all transform translate-y-20 opacity-0 z-50 text-sm font-bold flex items-center gap-2">
+        <span>🎉</span> <span id="toast-message">Modifica Salvata!</span>
+    </div>
+
+    <!-- INTERACTIVE JAVASCRIPT -->
+    <script>
+        // Tab switching logic
+        function switchTab(tabId) {
+            // Hide all panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            // Show target panel
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+
+            // Reset tab button states
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-porto-blue', 'text-white', 'shadow-md');
+                btn.classList.add('bg-white', 'text-porto-blue');
+            });
+
+            // Set active button state
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('bg-white', 'text-porto-blue');
+            activeBtn.classList.add('bg-porto-blue', 'text-white', 'shadow-md');
+        }
+
+        // Checklist persistence & tracking
+        const checkedLocations = JSON.parse(localStorage.getItem('porto_visited_locations')) || {};
+
+        function initCheckboxes() {
+            Object.keys(checkedLocations).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.checked = checkedLocations[id];
+                }
+            });
+            updateProgressBar();
+        }
+
+        function toggleLocation(id) {
+            const el = document.getElementById(id);
+            checkedLocations[id] = el.checked;
+            localStorage.setItem('porto_visited_locations', JSON.stringify(checkedLocations));
+            updateProgressBar();
+            showToast(el.checked ? "Tappa contrassegnata come visitata!" : "Tappa rimossa dalle visitate.");
+        }
+
+        function updateProgressBar() {
+            const checkboxes = [
+                'check-tuela', 'check-cruise', 'check-flores', 'check-luis', 'check-vinum',
+                'check-bolhao', 'check-bento', 'check-mcd', 'check-lello', 'check-crystal',
+                'check-foz', 'check-matosinhos', 'check-airport'
+            ];
+            
+            let checkedCount = 0;
+            checkboxes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.checked) {
+                    checkedCount++;
+                }
+            });
+
+            const total = checkboxes.length;
+            const percentage = Math.round((checkedCount / total) * 100);
+            
+            document.getElementById('progress-text').innerText = `${percentage}%`;
+            document.getElementById('visited-count').innerText = checkedCount;
+            document.getElementById('total-count').innerText = total;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        // Custom simulation for the transport selection
+        function calculateTransport(type) {
+            const box = document.getElementById('transport-calc-box');
+            const msg = document.getElementById('transport-calc-msg');
+            box.classList.remove('hidden');
+
+            if (type === 'azul') {
+                msg.innerHTML = "💡 <b>Scelta Economica:</b> Perfetta se camminerete molto! Ricordati di acquistare la carta Andante Azul (0,60€) all'aeroporto per ogni passeggero e caricarla con corse singole Z2 per il centro e Z4 per il tragitto da/per l'aeroporto.";
+            } else {
+                msg.innerHTML = "✨ <b>Scelta Consigliata:</b> Ottimo! Con la carta Andante Tour 3 (15,00€), avete viaggi illimitati per 72 ore. Potete prendere la metro dall'aeroporto, i bus verso Foz do Douro o risalire in collina senza preoccuparvi delle zone Z2/Z4.";
+            }
+            showToast("Opzione selezionata!");
+        }
+
+        // Notes autosave logic
+        const notesArea = document.getElementById('travel-notes');
+        notesArea.value = localStorage.getItem('porto_travel_notes') || '';
+
+        notesArea.addEventListener('input', () => {
+            localStorage.setItem('porto_travel_notes', notesArea.value);
+            const status = document.getElementById('save-status');
+            status.classList.remove('opacity-0');
+            setTimeout(() => {
+                status.classList.add('opacity-0');
+            }, 1500);
+        });
+
+        function clearNotes() {
+            if (confirm("Sei sicuro di voler cancellare tutte le tue note?")) {
+                notesArea.value = '';
+                localStorage.removeItem('porto_travel_notes');
+                showToast("Note cancellate.");
+            }
+        }
+
+        // Custom dynamic Toast notification (avoids using blocking browser alert)
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // GOOGLE MAPS KML EXPORTER
+        // Generates a fully compliant KML file containing all the itinerary coordinate points
+        // This KML can be directly uploaded to "Google My Maps" (mymaps.google.com)
+        function downloadKML() {
+            const kmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Porto Tour - 1-3 Giugno</name>
+    <description>Itinerario di viaggio ottimizzato per Porto, con partenza da HF Tuela Porto</description>
+    
+    <!-- HF Tuela Porto -->
+    <Placemark>
+      <name>HF Tuela Porto (Hotel)</name>
+      <description>Base del tour - Camera al 14° piano</description>
+      <Point>
+        <coordinates>-8.6310,41.1541,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Cais da Ribeira -->
+    <Placemark>
+      <name>Cais da Ribeira - Gita 6 Ponti</name>
+      <description>Imbarco per la crociera fluviale di 50 minuti</description>
+      <Point>
+        <coordinates>-8.6111,41.1406,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Rua das Flores -->
+    <Placemark>
+      <name>Rua das Flores</name>
+      <description>Via pedonale storica e negozietti</description>
+      <Point>
+        <coordinates>-8.6138,41.1437,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Ponte Dom Luis I -->
+    <Placemark>
+      <name>Ponte Dom Luis I (Tramonto)</name>
+      <description>Camminata panoramica sul ponte superiore al tramonto</description>
+      <Point>
+        <coordinates>-8.6095,41.1399,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Vinum Restaurant -->
+    <Placemark>
+      <name>Vinum Restaurant (Graham's)</name>
+      <description>Ristorante panoramico e cantina a Gaia</description>
+      <Point>
+        <coordinates>-8.6264,41.1378,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Mercado do Bolhao -->
+    <Placemark>
+      <name>Mercado do Bolhao</name>
+      <description>Mercato tradizionale di specialità locali</description>
+      <Point>
+        <coordinates>-8.6061,41.1487,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Sao Bento Station -->
+    <Placemark>
+      <name>Stazione di Sao Bento</name>
+      <description>Stazione ferroviaria famosa per gli Azulejos</description>
+      <Point>
+        <coordinates>-8.6097,41.1456,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- McDonald's Imperial -->
+    <Placemark>
+      <name>McDonald's Imperial</name>
+      <description>Il fast food in stile Art Deco</description>
+      <Point>
+        <coordinates>-8.6111,41.1466,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Torre dos Clerigos -->
+    <Placemark>
+      <name>Torre dos Clerigos</name>
+      <description>Punto panoramico più alto del centro storico</description>
+      <Point>
+        <coordinates>-8.6147,41.1458,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Livraria Lello -->
+    <Placemark>
+      <name>Livraria Lello</name>
+      <description>Libreria neogotica monumentale</description>
+      <Point>
+        <coordinates>-8.6148,41.1469,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Jardins do Palacio de Cristal -->
+    <Placemark>
+      <name>Jardins do Palacio de Cristal</name>
+      <description>Splendido parco panoramico vicino all'hotel</description>
+      <Point>
+        <coordinates>-8.6259,41.1474,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Foz do Douro -->
+    <Placemark>
+      <name>Foz do Douro</name>
+      <description>La foce del fiume e il faro Felgueiras</description>
+      <Point>
+        <coordinates>-8.6728,41.1478,0</coordinates>
+      </Point>
+    </Placemark>
+    
+    <!-- Matosinhos -->
+    <Placemark>
+      <name>Matosinhos (Pranzo Pesce)</name>
+      <description>Ristoranti di pesce fresco grigliato</description>
+      <Point>
+        <coordinates>-8.6861,41.1802,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>`;
+
+            const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Porto_Itinerario_1-3_Giugno.kml';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("File KML Scaricato! Importalo su Google Maps.");
+        }
+
+        // Start initialization after window load
+        window.onload = function() {
+            initCheckboxes();
+        };
+    </script>
+</body>
+</html>
